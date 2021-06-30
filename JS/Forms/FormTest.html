@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Forms Test</title>
+    <style type="text/css">
+      :root {
+        box-sizing: border-box;
+        --pad-one: 0.5em;
+        --border: 0.5px solid black;
+      }
+      body {
+        background: grey;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        font-size: 1.2rem;
+      }
+      form {
+        display: flex;
+        flex-direction: column;
+        border: var(--border);
+        min-width: 400px;
+        background: rgb(219, 219, 219);
+      }
+      .label-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: var(--pad-one);
+        margin: var(--pad-one);
+      }
+      /* .label-container label {
+        align-self: flex-start;
+      } */
+
+      .label-container input {
+        align-self: flex-end;
+        border-radius: 3px;
+        padding: 4px;
+        background: rgb(240, 240, 240);
+      }
+
+      .button-container {
+        display: flex;
+        justify-content: space-evenly;
+        padding: var(--pad-one);
+        margin-bottom: var(--pad-one);
+      }
+
+      button {
+        border-radius: 5px;
+        padding: 5px;
+      }
+      button[type='submit'] {
+        background: rgb(182, 193, 255);
+      }
+      button {
+        background: rgb(255, 182, 182);
+      }
+
+      #table {
+        table-layout: fixed;
+        border-collapse: collapse;
+        min-width: 400px;
+        text-align: center;
+      }
+
+      #table thead tr {
+        background: rgb(187, 224, 187);
+      }
+
+      #table tr {
+        padding: var(--pad-one);
+        background: white;
+        border: var(--border);
+      }
+
+      td,
+      th {
+        padding: var(--pad-one);
+        border: var(--border);
+      }
+
+      tbody tr:nth-child(even) {
+        background: rgba(0, 0, 0, 0.253);
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1 class="forms-header">Add Tasks</h1>
+
+    <h2 id="error_message_here"></h2>
+
+    <form id="task_form" action="" name="task_form" method="GET">
+      <div class="label-container">
+        <label for="task_id">Task ID</label>
+        <input
+          type="number"
+          name="task_id"
+          id="task_id"
+          value=""
+          placeholder=""
+        />
+      </div>
+      <div class="label-container">
+        <label for="task_date">Date of task</label>
+        <input
+          type="date"
+          name="task_date"
+          id="task_date"
+          value=""
+          placeholder=""
+        />
+      </div>
+      <div class="button-container">
+        <!-- you change the TYPE of button!!! -->
+        <button id="submit-button" type="submit">Submit Task</button>
+        <button id="reset-button">Reset Table</button>
+      </div>
+    </form>
+
+    <table id="table">
+      <thead>
+        <tr>
+          <th data-column="col_date">Task ID#</th>
+          <th data-column="col_id">Task Date</th>
+        </tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+    </table>
+
+    <script>
+      const errorHeader = document.getElementById('error_message_here');
+      const taskForm = document.getElementById('task_form');
+      const inputID = document.getElementById('task_id');
+      const inputDate = document.getElementById('task_date');
+      const resetButton = document.getElementById('reset-button');
+      const table = document.getElementById('table-body');
+      const tableData = [];
+
+      const clearTable = () => {
+        taskForm.reset();
+        tableData.splice(0, tableData.length);
+        table.innerHTML = '';
+      };
+
+      resetButton.addEventListener('click', e => {
+        e.preventDefault();
+        if (
+          window.confirm('You Are About To Delete The Table, Are You Sure?')
+        ) {
+          clearTable();
+        }
+      });
+
+      taskForm.addEventListener('submit', e => {
+        e.preventDefault();
+        // form validation
+        if (!inputID.value || !inputDate.value) {
+          return (errorHeader.innerText = 'Both Values Required');
+        }
+        // transform string to number
+        const idValue = parseInt(inputID.value);
+        // date in ms.
+        const dateValue = inputDate.valueAsNumber;
+        // Date String
+        const date = inputDate.value;
+        // clear form
+        taskForm.reset();
+        // clear error header
+        errorHeader.innerText = '';
+        // log inputs and types
+        console.dir(e.target);
+        console.log(`input id: ${idValue}, type of ${typeof idValue}`);
+        console.log(`input date: ${date}, type of ${typeof date}`);
+        console.log(`Date in ms: ${dateValue}`);
+        // handle input data
+        pushData(idValue, date);
+      });
+
+      const pushData = (idValue, date) => {
+        // check if tableData is empty
+        if (tableData.length === 0) {
+          // if empty, push to tableData array
+          tableData.push({ id: idValue, date: date });
+          console.log('first entry:');
+          console.dir(tableData);
+          // build the table
+          buildTable(tableData);
+          return;
+        }
+
+        // if array is not empty,
+        if (tableData.length > 0) {
+          // push new data to array,
+          tableData.push({ id: idValue, date: date });
+
+          // sort array by ID.
+          console.log('sorting');
+          const sortById = tableData.sort(function (a, b) {
+            // console.log(`a: ${a.id}`);
+            // console.log(`b: ${b.id}`);
+            return a.id < b.id ? 1 : -1;
+          });
+          console.log('sorted by id:');
+          console.dir(sortById);
+
+          // now sort by date.
+          const sortByDate = sortById.sort(function (a, b) {
+            return a.date > b.date ? 1 : -1;
+          });
+          console.log('sort by date');
+          console.dir(sortByDate);
+
+          // now pass in the new sorted array to build the table.
+          buildTable(sortByDate);
+          return;
+        }
+      };
+
+      // build table function
+      const buildTable = array => {
+        // clear the table
+        table.innerHTML = '';
+        console.log('cleared table...');
+        // loop through array and add each entry to table
+        for (let task of array) {
+          // transform date to readable string
+          const dateUTC = new Date(task.date).toUTCString();
+          const dateString = dateUTC.slice(0, -12);
+          console.log(dateString);
+          let row = `<tr>
+                          <td>${task.id}</td>
+                          <td>${dateString}</td>
+                      </tr>`;
+          table.innerHTML += row;
+        }
+        console.log('new table');
+      };
+    </script>
+  </body>
+</html>
